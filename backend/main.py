@@ -11,8 +11,6 @@ from analysis_route import analysis_blueprint
 app = Flask(__name__)  # this is just the configuration of the app
 CORS(app)
 
-
-
 app.config['DEBUG'] = True  # this allows the app to run in debug mode and show errors
 app.config['SECRET_KEY'] = 'hfh38r83913103iqw920121123unsnuee'
 

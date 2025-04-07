@@ -33,12 +33,16 @@ class Resume(db.Model):
 
     
 class AnalysisResult(db.Model):
+  __tablename__ = "analysis"
+  id  = db.Column( db.Integer, primary_key = True)
+
  
 class JobDecription(db.Model):
+ _tablename = "description"
+ id = db.Column(db.Integer, primary_key = True)
  
 
 
- 
 
  if __name__ == "__name__":
     with app.app_context():  #needed for db operation

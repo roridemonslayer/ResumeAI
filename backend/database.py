@@ -5,7 +5,7 @@
 #Create relationships between models (User has many Resumes, etc.)
 
 from flask import Flask, request, redirect, jsonify #requests handles incoming data and redorect jsut sends the user to another route or url
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy 
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///resume_ai.db' # just tell sqlalchemy where ur db is 
@@ -28,8 +28,12 @@ class User(db.Model):
 class Resume(db.Model):
  __tablename__ = "resume"
  id = db.Column(db.Integer, primary_key = True)
- user_id = db.Column(db.Integer, db.ForeginKey('users.id'))
- 
+ user_id = db.Column(db.Integer, db.ForeginKey('users.id'), nullable = False)
+ title = db.Column(db.String(200), nullable = False) #this is for the title of the resume
+ file_path = db.Column(db.Text)  #the reason we have a file_path column is cuz some users are gonna add their pdf, DOCXA OR LIKE OHTER file format so this is where u can store the location of the file in serve or cloud storage
+ content = db.Column(db.Text, nullable = False) #the use of db.Text, just allows you to store large amounts of text without any cap value
+ parsed_data = db.Column(db.Text) #this is useful when converting the raw data into structed JSON data
+
 
     
 class AnalysisResult(db.Model):

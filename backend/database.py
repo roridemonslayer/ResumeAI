@@ -4,7 +4,9 @@
 #Define your models (User, Resume, JobDescription, AnalysisResult)
 #Create relationships between models (User has many Resumes, etc.)
 
-from flask import Flask, request, redirect, jsonify #requests handles incoming data and redorect jsut sends the user to another route or url
+from flask import Flask
+from datatime import datetime
+import json
 from flask_sqlalchemy import SQLAlchemy 
 
 app = Flask(__name__)

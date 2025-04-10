@@ -5,7 +5,7 @@
 #Create relationships between models (User has many Resumes, etc.)
 
 from flask import Flask
-from datatime import datetime
+from datetime import datetime
 import json
 from flask_sqlalchemy import SQLAlchemy 
 
@@ -35,6 +35,8 @@ class Resume(db.Model):
  file_path = db.Column(db.Text)  #the reason we have a file_path column is cuz some users are gonna add their pdf, DOCXA OR LIKE OHTER file format so this is where u can store the location of the file in serve or cloud storage
  content = db.Column(db.Text, nullable = False) #the use of db.Text, just allows you to store large amounts of text without any cap value
  parsed_data = db.Column(db.Text) #this is useful when converting the raw data into structed JSON data
+ created_at = db.Column(db.DateTime, default = datetime.utcnow) # this just allows the datetime sto be shown regardless of wehre u are in the world. its univseralal time 
+ updated_at = db.Column(db.DateTime, defualt = datetime.utcnow)
 
 
     

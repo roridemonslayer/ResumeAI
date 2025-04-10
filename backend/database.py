@@ -44,8 +44,10 @@ class Resume(db.Model):
       return json.loads(self.parsed_data)# what json loads does, is basically just decodes a josn string into a python dictionary 
     return{} #it returns nothing if theres no parsed data found
 #2nd
-  def set_parsed_data(self, data_dict): #what data_dict 
-    
+  def set_parsed_data(self, data_dict): #what data_dict is, is just like what u wanna save basically 
+    self.parsed_data = json.dumps(data_dict)#were using this because when u have a python dict, u cant jsut save it directly
+    # so to simplify everything, set just sets the databse somewhere for the computer and converts it into strings 
+    #get just gets it for later when u need it again and need to work with it
 class AnalysisResult(db.Model):
   __tablename__ = "analysis"
   id  = db.Column( db.Integer, primary_key = True)

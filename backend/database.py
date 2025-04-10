@@ -28,17 +28,23 @@ class User(db.Model):
  
 
 class Resume(db.Model):
- __tablename__ = "resume"
- id = db.Column(db.Integer, primary_key = True)
- user_id = db.Column(db.Integer, db.ForeginKey('users.id'), nullable = False)
- title = db.Column(db.String(200), nullable = False) #this is for the title of the resume
- file_path = db.Column(db.Text)  #the reason we have a file_path column is cuz some users are gonna add their pdf, DOCXA OR LIKE OHTER file format so this is where u can store the location of the file in serve or cloud storage
- content = db.Column(db.Text, nullable = False) #the use of db.Text, just allows you to store large amounts of text without any cap value
- parsed_data = db.Column(db.Text) #this is useful when converting the raw data into structed JSON data
- created_at = db.Column(db.DateTime, default = datetime.utcnow) # this just allows the datetime sto be shown regardless of wehre u are in the world. its univseralal time 
- updated_at = db.Column(db.DateTime, defualt = datetime.utcnow)
-
-
+  __tablename__ = "resume"
+  id = db.Column(db.Integer, primary_key = True)
+  user_id = db.Column(db.Integer, db.ForeginKey('users.id'), nullable = False)
+  title = db.Column(db.String(200), nullable = False) #this is for the title of the resume
+  file_path = db.Column(db.Text)  #the reason we have a file_path column is cuz some users are gonna add their pdf, DOCXA OR LIKE OHTER file format so this is where u can store the location of the file in serve or cloud storagecontent = db.Column(db.Text, nullable = False) #the use of db.Text, just allows you to store large amounts of text without any cap value
+  parsed_data = db.Column(db.Text) #this is useful when converting the raw data into structed JSON data
+  created_at = db.Column(db.DateTime, default = datetime.utcnow) # this just allows the datetime sto be shown regardless of wehre u are in the world. its univseralal time 
+  updated_at = db.Column(db.DateTime, defualt = datetime.utcnow, onupdate = datetime.utcnow) #thifs just records the time the resume everytime its updated 
+#helper methods so these helper methods basically small functions inside ur code and u can call method when u need something reused to write somethign for u 
+#were going use this method to convert our parsed data into JSON data. 
+#1st
+  def get_parsed_data(self):  #self is just used to refer to the fact that this instance is particular to resume 
+    if self.parsed_data: # what this does is like, if theres anythign in our parsed_data, just check
+      return json.loads(self.parsed_data)# what json loads does, is basically just decodes a josn string into a python dictionary 
+    return{} #it returns nothing if theres no parsed data found
+#2nd
+  def set_parsed_data(self, data_dict): #what data_dict 
     
 class AnalysisResult(db.Model):
   __tablename__ = "analysis"

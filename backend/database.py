@@ -75,26 +75,26 @@ class JobDecription(db.Model):
 class AnalysisResult(db.Model):
   id = db.Column(db.Integer, primary_key = True)
   user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
-  resume_id = db.Column(db.Integet, db.ForeignKey("resume.id"), nullable = False)
-  job_id = db.Column(db.Integet, db.ForeignKey("description.id"), nullable = False)
+  resume_id = db.Column(db.Integer, db.ForeignKey("resume.id"), nullable = False)
+  job_id = db.Column(db.Integer, db.ForeignKey("description.id"), nullable = False)
   match_percentage = db.Column(db.Float)  #this generates the match percentage of each persons resume
   keywords_match= db.Column(db.Float) #this calculates what precentage the words match to the description 
   skills_allignment = db.Column(db.String(50)) # generates through text how strong or weak the  skills are 
   format_compatibality = db.Column(db.String(50)) #generates how close to format the resume is 
   improvements = db.Column(db.Text) #which just shows like, what improvements users need to make to their resume
-  created_at = db.Column(db.DateTime, defualt = datetime.utcnow)
+  created_at = db.Column(db.DateTime, default = datetime.utcnow)
 
   user= db.relationship("User", backref = "analysis")
   resume = db.relationship("Resume", backref = "analysis")
   job = db.relationship("JobDescription", backref = "analysis")
 
-  def get_analysis(self):
-    if self.analysis:
-      return json.loads(self.analysis)
+  def get_improvements(self):
+    if self.improvements:
+      return json.loads(self.improvements)
     return[]
 
-  def set_analysis(self, anaylsis_list):
-    self.analysis = json.dumps(anaylsis_list)
+  def set_improvements(self, improvements_list):
+    self.improvements = json.dumps(improvements_list)
 
 if __name__ == "__name__":
     with app.app_context():  #needed for db operation

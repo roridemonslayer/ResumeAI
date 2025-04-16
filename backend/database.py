@@ -48,23 +48,18 @@ class Resume(db.Model):
     self.parsed_data = json.dumps(data_dict)#were using this because when u have a python dict, u cant jsut save it directly
     # so to simplify everything, set just sets the databse somewhere for the computer and converts it into strings 
     #get just gets it for later when u need it again and need to work with it
-class AnalysisResult(db.Model):
-  __tablename__ = "analysis"
-  id  = db.Column( db.Integer, primary_key = True)
-  
 
+  class JobDecription(db.Model):
+    _tablename = "description"
+    id = db.Column(db.Integer, primary_key = True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
+    title = db.Column(db.String(300), nullable = False) 
+    company = db.Column(db.String(100), nullable = False)
+    content = db.Column(db.Text)
+    keywords = db.Column(db.Text)
+    created_at  = db.Column(db.DateTime, default = datetime.utcnow)
+    user = db.relationship('User', backref ='description' ) #backref just allows u to go from user to decritpion easily like a switch 
  
-class JobDecription(db.Model):
-  _tablename = "description"
-  id = db.Column(db.Integer, primary_key = True)
-  user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
-  title = db.Column(db.String(300), nullable = False) 
-  company = db.Column(db.String(100), nullable = False)
-  content = db.Column(db.Text)
-  keywords = db.Column(db.Text)
-  created_at  = db.Column(db.DateTime, default = datetime.utcnow)
-  user = db.relationship('User', backref ='description' )
-
   def get_keywords(self):
     if self.keywords:
       return json.loads(self.keywords)

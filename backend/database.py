@@ -38,7 +38,7 @@ class Resume(db.Model):
   updated_at = db.Column(db.DateTime, default = datetime.utcnow, onupdate = datetime.utcnow) #thifs just records the time the resume everytime its updated 
 #helper methods so these helper methods basically small functions inside ur code and u can call method when u need something reused to write somethign for u 
 #were going use this method to convert our parsed data into JSON data. 
-#1st
+
   def get_parsed_data(self):  #self is just used to refer to the fact that this instance is particular to resume 
     if self.parsed_data: # what this does is like, if theres anythign in our parsed_data, just check
       return json.loads(self.parsed_data)# what json loads does, is basically just decodes a josn string into a python dictionary 
@@ -58,7 +58,7 @@ class Resume(db.Model):
     content = db.Column(db.Text)
     keywords = db.Column(db.Text)
     created_at  = db.Column(db.DateTime, default = datetime.utcnow)
-    user = db.relationship('User', backref ='description' ) #backref just allows u to go from user to decritpion easily like a switch 
+    user = db.relationship('User', backref ='description' ) #Hey, this thing belongs to a user." And the backref part just makes it easy to go the other way too — so from a user, you can quickly grab their descriptions.
  
   def get_keywords(self):
     if self.keywords:

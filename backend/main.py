@@ -15,7 +15,7 @@ def create_app():
     app.config['SECRET_KEY'] = 'hfh38r83913103iqw920121123unsnuee'
     #this js initizalizes the database
     init_db(app)
-    #cors enables frontend backend connectio
+    #cors This allows web applications to access resources from a domain different from the one that served the initial page, but in a controlled manner. 
     CORS(app)
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(resume_blueprint)

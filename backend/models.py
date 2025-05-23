@@ -9,11 +9,8 @@ from datetime import datetime
 import json
 from flask_sqlalchemy import SQLAlchemy 
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///resume_ai.db' # just tell sqlalchemy where ur db is 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #this just prevents unccary tracking in ur sql
 
-db = SQLAlchemy(app) #sql instance
+db = SQLAlchemy() #sql instance
 
 class User(db.Model):
     __tablename__ = "users"
@@ -42,23 +39,23 @@ class Resume(db.Model):
   def get_parsed_data(self):  #self is just used to refer to the fact that this instance is particular to resume 
     if self.parsed_data: # what this does is like, if theres anythign in our parsed_data, just check
       return json.loads(self.parsed_data)# what json loads does, is basically just decodes a josn string into a python dictionary 
-    return{} #it returns nothing if theres no parsed data found
+    return[] #it returns nothing if theres no parsed data found
 #2nd
   def set_parsed_data(self, data_dict): #what data_dict is, is just like what u wanna save basically 
     self.parsed_data = json.dumps(data_dict)#were using this because when u have a python dict, u cant jsut save it directly
     # so to simplify everything, set just sets the databse somewhere for the computer and converts it into strings 
     #get just gets it for later when u need it again and need to work with it
 
-  class JobDecription(db.Model):
-    _tablename = "description"
-    id = db.Column(db.Integer, primary_key = True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
-    title = db.Column(db.String(300), nullable = False) 
-    company = db.Column(db.String(100), nullable = False)
-    content = db.Column(db.Text)
-    keywords = db.Column(db.Text)
-    created_at  = db.Column(db.DateTime, default = datetime.utcnow)
-    user = db.relationship('User', backref ='description' ) #Hey, this thing belongs to a user." And the backref part just makes it easy to go the other way too — so from a user, you can quickly grab their descriptions.
+class JobDecription(db.Model):
+  __tablename__ = "description"
+  id = db.Column(db.Integer, primary_key = True)
+  user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)
+  title = db.Column(db.String(300), nullable = False) 
+  company = db.Column(db.String(100), nullable = False)
+  content = db.Column(db.Text)
+  keywords = db.Column(db.Text)
+  created_at  = db.Column(db.DateTime, default = datetime.utcnow)
+  user = db.relationship('User', backref ='description' ) #Hey, this thing belongs to a user." And the backref part just makes it easy to go the other way too — so from a user, you can quickly grab their descriptions.
  
   def get_keywords(self):
     if self.keywords:

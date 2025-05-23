@@ -46,7 +46,7 @@ class Resume(db.Model):
     # so to simplify everything, set just sets the databse somewhere for the computer and converts it into strings 
     #get just gets it for later when u need it again and need to work with it
 
-class JobDecription(db.Model):
+class JobDescription(db.Model):
   __tablename__ = "description"
   id = db.Column(db.Integer, primary_key = True)
   user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable = False)

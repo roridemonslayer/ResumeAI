@@ -10,7 +10,7 @@ from profile_route import profile_blueprint
 from analysis_route import analysis_blueprint
 
 def create_app():
-    """Create and configure Flask application"""
+
     app = Flask(__name__)
     
     # Configure app settings

@@ -15,7 +15,7 @@ def create_app():
     
     # Configure app settings
     app.config['DEBUG'] = True
-    app.config['SECRET_KEY'] = 'hfh38r83913103iqw920121123unsnuee'
+    app.config['SECRET_KEY'] = "ere8enaworo33910202nrweraweraewr!aeba,hsebrae"
     
     # Initialize database
     try:

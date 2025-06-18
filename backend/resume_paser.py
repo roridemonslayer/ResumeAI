@@ -1,1 +1,2 @@
-from pyresparser 
+from pyresparser import ResumeParser
+

@@ -47,4 +47,14 @@ class ResumeParser: #this makes a class called resume parser
         parsed_data = self._parse_text(text) #so this line is to set up the parse data like the users name, experience, educaiton etc etc. 
         #it returnse the parse info in a dict form or "hash map form"
 
-        #now we make the meta data. meta data is
+        #now we make the meta data. meta data just contained info on what the parse just processed. 
+
+        #the meta data is It provides essential information about the parsing process itself, file characteristics, and processing statistics that are crucial for debugging, analytics, and database management so keep this in mind for next time your working with meta data. 
+        parsed_data['metadata'] = { #what this does is create. a metadata fucntion in the dict parrsated data. 
+            'file_path':file_path, #this is just the origial resume file tied to the metadata
+            'file_name' :Path(file_path).name, #what this does is convert a file like Path("/uploads/resumes/john_doe.pdf").name to john_doe.pdf/ it just outpiut the file name in a simple way.
+            'file_size' : os.get.getsize(file_path), #so what this does it it outputs the data of the resume in byte size so like if a resume has 1000 likes it'll be like file_size = "1000" like that 
+            #this is imporant cuz it allows us to know like how much space each file is taking up and if it's cause slowdown traffic 
+            "parsed_at" : datetime.utcnow().isoformat(), #what this does is just display the time in which the resume was parsed
+
+        }

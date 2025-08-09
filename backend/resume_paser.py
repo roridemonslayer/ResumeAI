@@ -20,7 +20,8 @@ class ResumeParser: #this makes a class called resume parser
             #if it works it'll print what I have up there        
         except OSError:         
             print("Spacy doesn't work BOOOO") #this prints that like spacey doenst work         
-            self.nlp = None #sets nlp to none so the rest of the program knows its missing
+            self.nlp = None #sets nlp to none so the rest of the program knows its missing. 
+            #basically sayign the nlp can't process the human language to interperet. 
     
     def parse_resume(self, file_path: str, user_id: int = None ) -> Dict: #returns stuff in a dict/hashmap type with a key being assinged to a value the key being the resume        
         #self just refers to the resume instace, file_path is the path to the resume, the user_id is just for user id and if there isn't one it'll say none, and -> dict returns dict with all of resume paseerd info               
@@ -62,3 +63,31 @@ class ResumeParser: #this makes a class called resume parser
 
         }
         return parsed_data
+    def _extracting_from_pdf(self, pdf_path: str) -> str: #what this is, we're making a function for extracting the data from the pdf, it'll return everything in string format.
+    #the pdf_path is the file path to the pdf and then it'll return it as a string
+
+        text = "" #this an empty string because this is wehre the accumilated extracted text will go 
+        try: # try is just like syaing "this might be risky code, try it"
+            with pdfplumber.open(pdf_path) as pdf: # so what this is doing is that its opening the file for u, thats why u use with. with with
+                #it opens the file and then when ur done with it, it complatetley clsoes this block out even if there;s an error in the middle 
+                #so that line is just opening the file
+                 #it makes the the pdf is cloed properaly even if there is an error
+                for page in pdf.pages:  #this is going to be looping through each page in the pdf the pdf.pages is a list of all the pages in the pdf 
+                    page_text = page.extract_text() #this is a method from pdf plumber. and it just tried to pull text form the pdf 
+                    if page_text: 
+                        text += page_text + "\n" # this one add the current page's text to the overall text, followed by a newline for separation
+            if text.strip(): #this just again removes extra whtie space from the end and beginnign of the new text
+                print("Text Extracted from PDF Plumber")
+                return text #send the full extreacted text of the document when this function is called. 
+        except Exception as e: #this will run if any error is found int he try function 
+            #exception is a function in pythin that catches errors in ur code
+            #e just stores the error onbject in e 
+            print(f"PDFPlumber failed gang{e}") #the e will get repalce with the error message 
+            
+
+
+
+
+
+
+

@@ -3,6 +3,7 @@ import re #this is used for matching patterns in text
 import json #this is used for data handling
 import spacy #this is for text analysis
 import pdfplumber #this is for extracting text from pdf files
+import fitz # PyMuPDF, used for extracting text from PDF files as a fallback
 from pathlib import Path #this is used to handle file paths
 from typing import List, Dict, Tuple, Optional #Python typing is a way to add hints to your code about what types of values variables, function arguments, and return values should have, helping make your code more readable and catch bugs earlier.
 from docx import Document #this is used to handle docx files from microsoft word
@@ -82,8 +83,36 @@ class ResumeParser: #this makes a class called resume parser
         except Exception as e: #this will run if any error is found int he try function 
             #exception is a function in pythin that catches errors in ur code
             #e just stores the error onbject in e 
-            print(f"PDFPlumber failed gang{e}") #the e will get repalce with the error message 
-            
+            print(f"PDFPlumber failed gang: {e}") #the e will get repalce with the error message 
+        #this is just a fall back if pdfplumber doesn't work. 
+        try: #again the try method its like js try this even if errors come up
+            doc = fitz.open(pdf_path) #this opens the pdf using the  PyMuPDF
+            #Returns a Document object stored in the variable doc. #Unlike the with statement, this does not auto-close — we’ll have to call .close() manually later.
+            for page in doc: #loops throguh each page in the doc, 
+                text += page.get_text() #Adds (+=) that text to the text variable we’ve been building.
+            doc.close() #this just manually closes the loop becuase we didn't have a with statement.
+            if text.strip():
+                print("Text Extracted from PDF")
+                return text #returns the extracted text. 
+        except Exception as e:  # just raises the error that it failed.
+            print(f"PyMuPDF failed: {e}")
+    
+    
+    def _extracting_from_docx(self, dock_path: str) -> str: #so this is how we're going to extract the info from docx
+        try: 
+            doc = Document(dock_path) 
+            text = "" #this is the empty space to store the text extracted
+            for paragraphs in doc.paragraphs(): # loops through the paragraphs  in the word doc 
+                text += paragraphs.text + "\n" # add the text to the paragrph varible to be used later
+                print("text extracted from docx")
+                return text
+        except Exception as e:
+            print(f"text extraction from DOCx: {e}")
+
+
+
+    
+
 
 
 

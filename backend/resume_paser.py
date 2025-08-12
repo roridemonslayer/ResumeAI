@@ -107,8 +107,14 @@ class ResumeParser: #this makes a class called resume parser
                 print("text extracted from docx")
                 return text
         except Exception as e:
-            print(f"text extraction from DOCx: {e}")
+            print(f"text extraction from DOCx: {e}") 
 
+    def _parse_text(self, text: str) -> dict #so what this is going is just intianlting what we're goign to use to parse the text.
+        doc = self.nlp(text) #what htis is doign is taking the text and transform it itno a doc the text from the pdf and converting it into language that is 
+        #redable for the spacy model to understand.
+
+
+ 
 
 
     

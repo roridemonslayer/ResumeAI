@@ -133,8 +133,24 @@ class ResumeParser: #this makes a class called resume parser
         result['projects'] = self._extract_projects(text) #just tkaes the raw text
 
         return result
+    #now we;re going to make functions for each part of the text extraction process
 
- 
+    
+    def _extract_personal_info(self, text: str, doc) -> dict: 
+        #so this us definign the perosnal info metho, it's taking in the raw resume text and the spaCy doc and retruns a dict of the perosnal info. hence the ->
+        personal_info = {} 
+        #this is just an empty field that'll be filled with the personal info later on 
+
+        emails = re.findall(
+            #what re.findall does is that it extracts all subtrings that look like emails
+           r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text
+        )#as seen above is a email rejex pattern. the \b just makes sure that the match stars cleanrly and ends cleaney
+        #rejex tell s python what kinds of text to match in the email or wtv it is ur using
+        #the a-z and, the 0-9 and the room for specical characters are all apart of the components for the email. 
+        #the @ symbol is for the @ part of the email, think of rejex pattern has characters that contain all of the possible components that could be inside the ressume
+
+        personal_info['email'] = emails[0] if emails else None
+
 
 
     

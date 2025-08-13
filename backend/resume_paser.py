@@ -110,9 +110,9 @@ class ResumeParser: #this makes a class called resume parser
             print(f"text extraction from DOCx: {e}") 
 
     def _parse_text(self, text: str) -> dict: #so what this is going is just intianlting what we're goign to use to parse the
-        doc = self.nlp(text) #what htis is doign is taking the text and transform it itno a doc the text from the pdf and converting it into language that is 
+        doc = self.nlp(text) #what this is doing is taking the text and transform it itno a doc the text from the pdf and converting it into language that is 
         #redable for the spacy model to understand.
-        result = {
+        result = { #this is just extracting all the neccasry from the resume like the perosnalfo info the experience
             "personal Info" : {}, 
             "experience" :[], 
             "education" : [], 
@@ -120,9 +120,19 @@ class ResumeParser: #this makes a class called resume parser
             "certificaitons" : [],
             "awards" : [], 
             "projects" : [], 
-            "raw_text" : text
+            "raw_text" : text #this just keeps the original text if needed.
+            
         }
 
+        result['personal_info'] = self._extract_personal_info(text, doc) #this gets info like name, number, email.
+        result["experience"] = self._extract_experience(text) #this wil just extract the expeirience from the resume
+        result['education'] = self._extract_education(text, doc) #takes the edcuation from the resume and uses  NLP entity recognition to detect school names, degrees, and dates
+        result['skills'] = self._extract_skills(text) #takes the skills
+        result['certifications'] = self._extract_certifications(text) 
+        result['awards'] = self._extract_awards(text)
+        result['projects'] = self._extract_projects(text) #just tkaes the raw text
+
+        return result
 
  
 

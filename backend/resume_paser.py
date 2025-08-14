@@ -149,7 +149,25 @@ class ResumeParser: #this makes a class called resume parser
         #the a-z and, the 0-9 and the room for specical characters are all apart of the components for the email. 
         #the @ symbol is for the @ part of the email, think of rejex pattern has characters that contain all of the possible components that could be inside the ressume
 
-        personal_info['email'] = emails[0] if emails else None
+        personal_info['email'] = emails[0] if emails else None #it takes the first email if any, but if there isn't then there's none else 
+
+        phone_patterns = [
+         r'(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})',  #domnestic numbers
+         r'\+?[0-9]{1,3}[-.\s]?[0-9]{3,4}[-.\s]?[0-9]{3,4}[-.\s]?[0-9]{3,4}' #internatuonak numbers more generic
+        ]
+        matches = [] #stores are the all the phone numbers
+        for pat in phone_patterns: #loops through each phone number 
+            for m in re.finditer(pat,text): #re.finditer() finds all matches of the pattern in the text, but instead of returning a list of strings, it returns an iterator of match objects.
+                s = m.group(0)
+                s = re.sub(r'\D+','',s)
+                matches.append(s)
+
+        personal_info['phone'] = matches[0] if matches else None
+
+        names = [ent.text.strip() for ent in doc.ents if ent.label_ == "PERSON"]
+        personal_info['names'] = names[0] if names else None
+
+        #this uses spaCy NER tto grab entitites labeled PERSON 
 
 
 

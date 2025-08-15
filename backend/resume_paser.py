@@ -169,6 +169,14 @@ class ResumeParser: #this makes a class called resume parser
 
         #this uses spaCy NER tto grab entitites labeled PERSON 
 
+        linkedin_pattern = r'(?:https?://)?(?:www\.)?linkedin\.com/in/[\w-]+'
+        linkedin_matches = re.findall(linkedin_pattern, text, re.IGNORESCASE)
+        personal_info['linkedin'] = linkedin_matches[0] if linkedin_matches else None
+
+        #what this is doing is finding the first match of the url no matter where it might be on the resume. it just keeps the oneit found first
+
+        return personal_info
+
 
 
     

@@ -175,7 +175,26 @@ class ResumeParser: #this makes a class called resume parser
 
         #what this is doing is finding the first match of the url no matter where it might be on the resume. it just keeps the oneit found first
 
-        return personal_info
+        locations = [ent.text for ent in doc.ents if ent.label_ in ["GPE", "LOC"]]
+        personal_info["locations"] = matches[0] if locations else None
+
+        #Remeber that spaCY is a NLP library that can read text and figure out what the role of each word is. 
+        #the doc is comign from self.nlp(text) which is spaCy processing the resume
+        #doc.ents means that all the named entinties spaCy found like names, dates, ciities etc 
+        #GPE stands for geo political entity so country states, coities 
+        #loc stans for location so like moutnations rivers etc
+        #doc ents is filer that keeps things tat are taged as GPE or LOC
+        #it also finds the first locaiton in the doc and saves it was personal_info['loction"]
+    def _extract_experience(self, text: str ) -> str: 
+        experience = []
+        experience_section = self._extract_section(text, [
+            'experience', 'work history', 'employment', 'professional experience'
+        ])
+        #so the extract_section is basically scanning the document to see if any of these names for expeiernce are present
+        #this makes sure it works so even if this ecpeierince section isn't titled expeirnece it'll still perfrom these tasks
+        if not experience_section: 
+            return experience #this will return an empty string if the name of the expeienrce thing isnt  in the list
+        job_blocks = re.split(r'\n(?=\d{4}|\d{1,2}/\d{4}|[A-Z][a-z]+ \d{4})', experience_section)
 
 
 

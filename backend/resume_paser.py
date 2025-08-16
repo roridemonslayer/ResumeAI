@@ -185,6 +185,8 @@ class ResumeParser: #this makes a class called resume parser
         #loc stans for location so like moutnations rivers etc
         #doc ents is filer that keeps things tat are taged as GPE or LOC
         #it also finds the first locaiton in the doc and saves it was personal_info['loction"]
+    
+    #extracing experience
     def _extract_experience(self, text: str ) -> str: 
         experience = []
         experience_section = self._extract_section(text, [
@@ -195,6 +197,39 @@ class ResumeParser: #this makes a class called resume parser
         if not experience_section: 
             return experience #this will return an empty string if the name of the expeienrce thing isnt  in the list
         job_blocks = re.split(r'\n(?=\d{4}|\d{1,2}/\d{4}|[A-Z][a-z]+ \d{4})', experience_section)
+        #what this does is split the text into chunks where one chunk is assinged to one job based on data patterns that often mark the start of a new job
+        # so its saying \d{4} look for 4 digit year loike 2021. d[1,2]/\d{4} look for more/year [A-Z][a-z]+ \d{4} → look for something like "January 2020".
+        for block in job_blocks:
+            if len(block.strip()) < 20: #skil short blocks
+                continue 
+        #if a chunk is too short, it'll problen not be a  real job detialed portion so it'll get skipped
+            job_info = self._parse_job_block(block) # what this basically does is that it pull the structured detaiols out of the documents
+            if job_info: #this is saying if there stuff in the job_info
+                experience.append(job_info) #appened it to the expeience block if job_info is found in the text
+    #job block parsing
+    def _parse_job_block(self, block: str) -> Optional[Dict]: #this is a helper function to take one chunk of text in the job section of the resume and turns it into neat dictionary with structured info
+        #the -> Optional[Dict] means that it'll either return a dict if parsing works or none if theres nothign usuaful to work with 
+
+        lines = block.stirp().split('\n') #the strip() remove any extra black space from the start and end of the text/ 
+        #the split turns the text into a lsit of lines so you can process each line individually 
+        if len(lines) < 2:
+            return None
+        #this is saying if theres less than 2 lines then  the model will look at it like it's nto a real job and return none 
+
+        job_info ={ #what this does is create an empty temapltes for job details
+            #the values will fill as the model parses the data 
+            "title" : None, 
+            "company" : None, 
+            "duration" : None, 
+            "description" : [], #both of these are empty lists because there can be multiople bullet points where as the others would js be one liners
+            "achievements" : []
+        }
+        date_pattern = r'b(?:\d{1,2}/\d{4}|\d{4}|[A-Z][a-z]+ \d{4}|\d{1,2}/\d{1,2}/\d{4})\b'
+        #this date_pattern is looking for data formats like 05/2020,2022, 00/02/2023 or like jan, 2018 just any way taht the user might write the data 
+
+
+
+
 
 
 

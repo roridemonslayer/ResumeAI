@@ -224,12 +224,30 @@ class ResumeParser: #this makes a class called resume parser
             "description" : [], #both of these are empty lists because there can be multiople bullet points where as the others would js be one liners
             "achievements" : []
         }
-        date_pattern = r'b(?:\d{1,2}/\d{4}|\d{4}|[A-Z][a-z]+ \d{4}|\d{1,2}/\d{1,2}/\d{4})\b'
+        date_pattern = r'\b(?:\d{1,2}/\d{4}|[A-Z][a-z]+ \d{4}|\d{4}|\d{1,2}/\d{1,2}/\d{4}|Present|Current)\b'
         #this date_pattern is looking for data formats like 05/2020,2022, 00/02/2023 or like jan, 2018 just any way taht the user might write the data 
 
+        dates = re.findall(date_pattern, block)
 
+        #so what this line is find all dates in the job block and store them in a list 
+        if dates: 
+            start = dates[0]
+            end = dates[1] if len(dates) > 1 else 'Present'
+            job_info['duration'] =  f"{start} - {end}"
+            # what this wil ldo is that if present is seen like in the resume which it often times is like for an expeirence, it'll say like date to present but also pull like dates with regular dates if tyhat makes sense=
 
+    #Now we're going to work on extractiing the education from the resume 
+    def _extract_education(self, text: str, dic) -> List[Dict]:
+        #what this will do is it'll return a list of  dictionaries. each dict = one educaiton entry  
+        education = []
+        #the education starts empty because we're going to appened what we find as we go on 
 
+        education_section = self._extract_section( 
+            text, 
+            ['educations', 'academic background', 'qualifications']
+        )
+         #what the _extract_education  is doing is taking the raw text for those headings in the education and return just that slice of text. 
+         #the names are just for like if its not like called education
 
 
 

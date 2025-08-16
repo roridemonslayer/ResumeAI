@@ -251,7 +251,31 @@ class ResumeParser: #this makes a class called resume parser
 
         if not education_section:
             return education
-        
+        organizations = [ent.text for ent in doc.ents if ent.label_ == "ORG"]
+        #this is using spaCy's NEr(doc. ents). to find entituies labeled org. this label is used for like comapnies and insititielsy so it'll pick up  school and univeirsty names. and sames them all as string in an organziaotions list
+
+        degree_patterns = [ 
+            r'\b(?:Bachelor|Master|PhD|doctorate|associate|diploma|certificate)\b[^.\n]*',
+            r'\b(?:BS|BA|MS|MA|MBA|PhD|BSc|MSc)\b[^.\n]*',
+            r'\b(?:B\.S\.|B\.A\.|M\.S\.|M\.A\.|Ph\.D\.)\b[^.\n]*'
+        ]
+        #so this is the regex pattern that is being used to identify the differnet bacheles, masters or phd the user may 
+        # it catches full words, abbreviatiosn and dotted abbreabuaston of the degrees. 
+
+        degrees = []
+        for pattern in degree_patterns: 
+            degrees.extend(re.findall(pattern, education_section, re.IGNORECASE))
+            #this is basically only lookign for patterns withing the educations section for degrees. the re.findall helps with that matchign procress. the .exeend adds them all to the empy degress 
+            #for safe keeping.  #the ignorecase is like telling pythin when ur matchign the regex pattern, don't worry about case wheater its upper or lower case
+
+        for i, degree in enumerate(degrees):
+            edu_info = { 
+                'degree ': degree.strip(),
+                'institution' :  organizations[i] if i < len(organizations) else None,
+                "year" : None
+            }
+        #so enumerate(degrees) gives you the index i and the degree string
+        #        
 
 
 

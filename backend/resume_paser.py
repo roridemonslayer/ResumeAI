@@ -249,6 +249,10 @@ class ResumeParser: #this makes a class called resume parser
          #what the _extract_education  is doing is taking the raw text for those headings in the education and return just that slice of text. 
          #the names are just for like if its not like called education
 
+        if not education_section:
+            return education
+        
+
 
 
     

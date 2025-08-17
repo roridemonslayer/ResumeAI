@@ -297,6 +297,12 @@ def _extract_skills(self, text: str) -> List[str]:
         'project management', 'leadership', 'communication', 'teamwork', 'problem solving', 'analytical thinking'
     ]
     #this function is used to extract skills in a resume's text
+    found_skills = [] 
+    text_lower = text.lower()
+    for skill in skill_keywords:
+        if skill.lower() in text_lower: 
+            found_skills.append(skill)
+    #converts the resume text to lowercasse and loops through the skill keywords and see if one appeates in the text and if it does it adds it to the found_skills
 
 
     

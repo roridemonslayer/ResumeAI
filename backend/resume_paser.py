@@ -274,8 +274,12 @@ class ResumeParser: #this makes a class called resume parser
                 'institution' :  organizations[i] if i < len(organizations) else None,
                 "year" : None
             }
-        #so enumerate(degrees) gives you the index i and the degree string
-        #        
+            year_match = re.search(r'\b(19|20)\d{2}\b', degree)
+            if year_match:
+                edu_info['year'] = year_match.group()
+            education.append(edu_info)
+            #so enumerate(degrees) gives you the index i and the degree string
+              #what this does is that it looks inside the degree limne for a year. 
 
 
 

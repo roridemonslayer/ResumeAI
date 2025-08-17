@@ -281,6 +281,22 @@ class ResumeParser: #this makes a class called resume parser
             #so enumerate(degrees) gives you the index i and the degree string
               #what this does is that it looks inside the degree limne for a year. 
 
+#this section is now extracting the skills form the users 
+def _extract_skills(self, text: str) -> List[str]:
+    skill_keywords = [
+        'python', 'java', 'javascript', 'typescript', 'c++', 'c#', 'php', 'ruby', 'go', 'rust', 'swift', 'kotlin',
+        # Web technologies
+        'html', 'css', 'react', 'angular', 'vue', 'node.js', 'express', 'django', 'flask', 'spring',
+        # Databases
+        'sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'sqlite', 'oracle', 'nosql',
+        # Cloud & DevOps
+        'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'jenkins', 'git', 'github', 'gitlab', 'ci/cd',
+        # Data & AI
+        'machine learning', 'data analysis', 'pandas', 'numpy', 'tensorflow', 'pytorch', 'scikit-learn',
+        # Soft skills
+        'project management', 'leadership', 'communication', 'teamwork', 'problem solving', 'analytical thinking'
+    ]
+    #this function is used to extract skills in a resume's text
 
 
     

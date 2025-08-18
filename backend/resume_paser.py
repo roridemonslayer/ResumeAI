@@ -326,7 +326,45 @@ def _extract_certifications(self, text:str) -> List[str]:
     #what this is doing is same thing, extractin text from cert and follows the diff names the cert section could have 
     # if none certs are found , it'll return a empty list 
     cert_lines = cert_section.split('\n') 
-    certifcations = []
+    certifications = []
+
+    for line in cert_lines:
+        line = line.strip()
+        if len(line) > 5 and (line.startswith(('.', '-', '*')) or any(word in line.lower() for word in ['certifications', 'certificates', 'licenses'])):
+            certifications.append(line)
+
+        #so what this is doing is that its' splits the section into lines. and loops trhoguh each line and cleans it up with strip. and filters too short lines/ 
+        # if it starts with a bullet like .-* or has certfied, certficiate or licnesse then its assumes its a valid certificaions and adds it to certificaitons to be awble to look through 
+def _extract_projects(self, text: str) -> List[Dict]:
+    prog_sec= self._prog_section(text, ['projects', 'side projects', 'persoanl project'])
+    if not prog_sec:
+        return []
+    
+    #so this is finding the project section and the many names that could be under project section and if the project section isnt dound it just reutrns an empty list 
+
+    proj_blocks = re.split(r'\n(?=[A-Z])', prog_sec)
+    projects = []
+    # what this does is it splits whenever it sees a new line follwoerd by a capital letter.
+    #prepares an empty list to stores structured project data
+    for block in proj_blocks:
+        if len(block.strip()) > 20: 
+            lines = block.split('\n')
+            project = { 
+                'name' :  lines[0].strip(), 
+                'description' : '\n'. join(lines[1:]).strip()
+
+            }
+            projects.append(project)
+            # eachblock that's longer than 20 characters is assumed to be a real project. 
+            #it splits into lines
+            #first line = project name/title 
+            #remaining lines = description 
+            #puts then in a dictionslay with keys name and descriptuon and add that dict to the projects list.
+
+            return projects
+        
+
+                              
 
 
 

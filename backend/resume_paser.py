@@ -317,55 +317,74 @@ def _extract_skills(self, text: str) -> List[str]:
         #it limmits to 10 extra skills to avoid pulling in garbage text 
         return list(set(found_skills))
     #so what this does is coevrts lsit to a set and removes duplicate sos that "python: deosn't appear twice"
-    def _extract_certifications(self, text:str) -> List[str]:
-        cert_section = self._extract_section(text, ['certifications','certificates', 'licenses'])
+def _extract_certifications(self, text:str) -> List[str]:
+    cert_section = self._extract_section(text, ['certifications','certificates', 'licenses'])
 
-        if not cert_section: 
-            return []   
+    if not cert_section: 
+        return []   
 
-        #what this is doing is same thing, extractin text from cert and follows the diff names the cert section could have 
-        # if none certs are found , it'll return a empty list 
-        cert_lines = cert_section.split('\n') 
-        certifications = []
+    #what this is doing is same thing, extractin text from cert and follows the diff names the cert section could have 
+    # if none certs are found , it'll return a empty list 
+    cert_lines = cert_section.split('\n') 
+    certifications = []
 
-        for line in cert_lines:
-            line = line.strip()
-            if len(line) > 5 and (line.startswith(('.', '-', '*')) or any(word in line.lower() for word in ['certifications', 'certificates', 'licenses'])):
-                certifications.append(line)
+    for line in cert_lines:
+        line = line.strip()
+        if len(line) > 5 and (line.startswith(('.', '-', '*')) or any(word in line.lower() for word in ['certifications', 'certificates', 'licenses'])):
+            certifications.append(line)
 
-        #so what this is doing is that its' splits the section into lines. and loops trhoguh each line and cleans it up with strip. and filters too short lines/ 
-        # if it starts with a bullet like .-* or has certfied, certficiate or licnesse then its assumes its a valid certificaions and adds it to certificaitons to be awble to look through 
-    def _extract_projects(self, text: str) -> List[Dict]:
-        prog_sec= self._prog_section(text, ['projects', 'side projects', 'persoanl project'])
-        if not prog_sec:
-            return []
-        
-        #so this is finding the project section and the many names that could be under project section and if the project section isnt dound it just reutrns an empty list 
+    #so what this is doing is that its' splits the section into lines. and loops trhoguh each line and cleans it up with strip. and filters too short lines/ 
+    # if it starts with a bullet like .-* or has certfied, certficiate or licnesse then its assumes its a valid certificaions and adds it to certificaitons to be awble to look through 
+def _extract_projects(self, text: str) -> List[Dict]:
+    prog_sec= self._prog_section(text, ['projects', 'side projects', 'persoanl project'])
+    if not prog_sec:
+        return []
+    
+    #so this is finding the project section and the many names that could be under project section and if the project section isnt dound it just reutrns an empty list 
 
-        proj_blocks = re.split(r'\n(?=[A-Z])', prog_sec)
-        projects = []
-        # what this does is it splits whenever it sees a new line follwoerd by a capital letter.
-        #prepares an empty list to stores structured project data
-        for block in proj_blocks:
-            if len(block.strip()) > 20: 
-                lines = block.split('\n')
-                project = { 
-                    'name' :  lines[0].strip(), 
-                    'description' : '\n'. join(lines[1:]).strip()
+    proj_blocks = re.split(r'\n(?=[A-Z])', prog_sec)
+    projects = []
+    # what this does is it splits whenever it sees a new line follwoerd by a capital letter.
+    #prepares an empty list to stores structured project data
+    for block in proj_blocks:
+        if len(block.strip()) > 20: 
+            lines = block.split('\n')
+            project = { 
+                'name' :  lines[0].strip(), 
+                'description' : '\n'. join(lines[1:]).strip()
 
-                }
-                projects.append(project)
-                # eachblock that's longer than 20 characters is assumed to be a real project. 
-                #it splits into lines
-                #first line = project name/title 
-                #remaining lines = description 
-                #puts then in a dictionslay with keys name and descriptuon and add that dict to the projects list.
+            }
+            projects.append(project)
+            # eachblock that's longer than 20 characters is assumed to be a real project. 
+            #it splits into lines
+            #first line = project name/title 
+            #remaining lines = description 
+            #puts then in a dictionslay with keys name and descriptuon and add that dict to the projects list.
 
-                return projects
-            
+            return projects
+def _extract_section(self, text: str, section_names: List[str]) -> Optional[str]:
+    #what this is doing is taking in the section titles like taking in the section names
+    text_lower = text.lower() 
+    #this converst the entire text into lowercase and stores it in text_lower
+    #this makes section case_intensive so like WORD, word amd WoRd will all be the same 
 
-                                
+    for section_name in section_names: 
+        #loops through each possible sectionname in the list either thats educaiton, expeirience and skills
+        pattern = rf'\b{section_name}\b.*?(?=\n[A-Z\s]+\n|\n\n[A-Z]|\Z)'
+        #so this is the regex pattern is to find a section. Grab the section starting at section_name until the next big section heading or the end of the document.”
+        match = re.search(pattern, text_lower, re.DOTALL | re.IGNORECASE) 
+        #this runs the regex search on the lowercase text 
+        #thre re.DOTALL makes . also match newlines and re.IGNORECASE ensuret that case doesn't matter and match will hold the regex object if found 
+        if match: 
+            return match.group()
+        #if match is found, retrun the text with .group. it gives out the whol ematched string 
+    return None 
+        #if no section from the list is found, it'll return None
 
+
+
+def parse_resume_for_flask(file_path: str, user_id: int = None) -> Dict: 
+    #were using this to buiult out flask so it can return clean JSON-like response 
 
 
 

@@ -305,11 +305,28 @@ def _extract_skills(self, text: str) -> List[str]:
     #converts the resume text to lowercasse and loops through the skill keywords and see if one appeates in the text and if it does it adds it to the found_skills
 
     skills_section = self._extract_section(text, ['skills', 'technical skills', 'core competencies', 'technologies'])
+    #this is just extracting from the skills section like. it could be like extracted from skills under a diff name. 
 
+    if skills_section: 
+        skill_lines = skills_section.replace('.',',').replace('-', ',').replace('|', ',')
+        potential_skills = [s.strip() for s in skill_lines.split(',') if len(s.trip())> 2]
+        found_skills.extend(potential_skills[:10]) # limit to prevent noise
 
-    
+        #so what this "." stuff is doing is that its coverts bullet points or seprates into commans to make spliiting easier. 
+        #we want to split it so that we can split sectioions into indviciuals kulls 
+        #it limmits to 10 extra skills to avoid pulling in garbage text 
+        return list(set(found_skills))
+    #so what this does is coevrts lsit to a set and removes duplicate sos that "python: deosn't appear twice"
+def _extract_certifications(self, text:str) -> List[str]:
+    cert_section = self._extract_section(text, ['certifications','certificates', 'licenses'])
 
+    if not cert_section: 
+        return []   
 
+    #what this is doing is same thing, extractin text from cert and follows the diff names the cert section could have 
+    # if none certs are found , it'll return a empty list 
+    cert_lines = cert_section.split('\n') 
+    certifcations = []
 
 
 

@@ -33,9 +33,9 @@ class ResumeParser: #this makes a class called resume parser
         
         file_extension = Path(file_path).suffix.lower() #What this is saying is to get the file extension in lowercase.        
         if file_extension == ".pdf":             
-            text = self.extract_the_text_from_pdf(file_path) #prcessing method for pdf          
+            text = self._extracting_from_pdf(file_path) #prcessing method for pdf          
         elif file_extension in ['.docx','.doc']:             
-            text = self.extract_the_text_from_docx(file_path) #processing method for docx         
+            text = self._extracting_from_docx(file_path) #processing method for docx         
         else:             
             raise ValueError(f"Unsupported file format: {file_path}") # returns false statement that the file type isn't suppsorted like if it isnt a pdf or a docx it wont procress. 
             
@@ -55,7 +55,7 @@ class ResumeParser: #this makes a class called resume parser
         parsed_data['metadata'] = { #what this does is create. a metadata fucntion in the dict parrsated data. 
             'file_path':file_path, #this is just the origial resume file tied to the metadata
             'file_name' :Path(file_path).name, #what this does is convert a file like Path("/uploads/resumes/john_doe.pdf").name to john_doe.pdf/ it just outpiut the file name in a simple way.
-            'file_size' : os.get.getsize(file_path), #this is how much space the file takes up on the disk. the disk of the computer ex. 202020 would be like 2.0 gb
+            'file_size' : os.path.getsize(file_path), #this is how much space the file takes up on the disk. the disk of the computer ex. 202020 would be like 2.0 gb
             "parsed_at" : datetime.utcnow().isoformat(), #what this does is just display the time in which the resume was parsed
             #isoformay converts into "2024-01-15T14:30:25.123456" this format when displaying the time and day it was created. 
             'user_id' : user_id, #this just tracks the users id. each user is assigned an id 
@@ -113,7 +113,7 @@ class ResumeParser: #this makes a class called resume parser
         doc = self.nlp(text) #what this is doing is taking the text and transform it itno a doc the text from the pdf and converting it into language that is 
         #redable for the spacy model to understand.
         result = { #this is just extracting all the neccasry from the resume like the perosnalfo info the experience
-            "personal Info" : {}, 
+            "personal_info" : {}, 
             "experience" :[], 
             "education" : [], 
             "skills " : [], 
@@ -170,7 +170,7 @@ class ResumeParser: #this makes a class called resume parser
         #this uses spaCy NER tto grab entitites labeled PERSON 
 
         linkedin_pattern = r'(?:https?://)?(?:www\.)?linkedin\.com/in/[\w-]+'
-        linkedin_matches = re.findall(linkedin_pattern, text, re.IGNORESCASE)
+        linkedin_matches = re.findall(linkedin_pattern, text, re.IGNORECASE)
         personal_info['linkedin'] = linkedin_matches[0] if linkedin_matches else None
 
         #what this is doing is finding the first match of the url no matter where it might be on the resume. it just keeps the oneit found first
@@ -385,6 +385,61 @@ def _extract_section(self, text: str, section_names: List[str]) -> Optional[str]
 
 def parse_resume_for_flask(file_path: str, user_id: int = None) -> Dict: 
     #were using this to buiult out flask so it can return clean JSON-like response 
+    parser = ResumeParser()
+    try:
+        parsed_data = parser.parse_resume(file_path, user_id)
+        #what this sodes is calling the parse_resume method and used toe file_path and the user_id to actually parse the resume file 
+
+        return{
+            'success' : True,
+            'data' : parsed_data,
+            'message' : 'Resume Parsed successfully'
+        } #this will return if its working and the data was parsed succesfully
+    except Exception as e:
+        return{
+            'success' : False,
+            'data' : None, 
+            'message': f'Resume not pasred right : {str(e)}'
+        }
+    
+if __name__ == "__main__":
+    parser = ResumeParser()
+    
+    # Test with your resume file
+    test_file = "rori.pdf"  # Make sure this file exists
+    
+    if Path(test_file).exists():
+        try:
+            result = parser.parse_resume(test_file)
+            print("\n" + "="*50)
+            print("           📋 RESUME PARSING RESULTS")
+            print("="*50)
+            
+            # Display results
+            print(f"👤 Name: {result['personal_info'].get('name', 'Not found')}")
+            print(f"📧 Email: {result['personal_info'].get('email', 'Not found')}")
+            print(f"📱 Phone: {result['personal_info'].get('phone', 'Not found')}")
+            print(f"📍 Location: {result['personal_info'].get('location', 'Not found')}")
+            
+            if result['skills']:
+                print(f"\n💪 Skills ({len(result['skills'])}):")
+                for skill in result['skills'][:10]:
+                    print(f"   • {skill}")
+            
+            if result['experience']:
+                print(f"\n💼 Experience ({len(result['experience'])}):")
+                for exp in result['experience'][:3]:
+                    print(f"   • {exp.get('title', 'Unknown Title')}")
+                    if exp.get('duration'):
+                        print(f"     Duration: {exp['duration']}")
+            
+            print("="*50)
+            
+        except Exception as e:
+            print(f"❌ Error: {e}")
+    else:
+        print(f"❌ Test file '{test_file}' not found. Please add a resume file to test.")
+
 
 
 

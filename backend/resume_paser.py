@@ -519,12 +519,9 @@ class ResumeParser: #this makes a class called resume parser
             import traceback
             traceback.print_exc()  # Print detailed error information for debugging
             return None
-
     def _extract_education(self, text: str, doc) -> List[Dict]:
-        """Extract education with duplicate prevention"""
-        # This method finds educational background information and organizes it
-        
-        education = []  # Will store list of education entries
+    
+        education = []
         
         # First, try to find a dedicated education section
         education_section = self._extract_section(
@@ -534,84 +531,179 @@ class ResumeParser: #this makes a class called resume parser
 
         if not education_section:
             print("⚠️ No education section found, searching entire text...")
-            education_section = text  # Use entire resume text as fallback
-        
-        # Extract organizations using spaCy if available (for school names)
-        organizations = []
-        if doc:  # If spaCy is available
-            # Find entities that spaCy identified as organizations
-            organizations = [ent.text for ent in doc.ents if ent.label_ == "ORG"]
-            # ORG = organization entities (companies, schools, etc.)
+            education_section = text
 
-        # Enhanced degree patterns to catch various degree formats
+        print(f"📚 Processing education section: {len(education_section)} characters")
+        
+        # Split into lines for line-by-line processing
+        lines = [line.strip() for line in education_section.split('\n') if line.strip()]
+        
+        # Enhanced degree patterns with more variations
         degree_patterns = [
-            # Full degree names like "Bachelor of Science in Computer Science"
-            r'\b(?:Bachelor|Master|PhD|Doctorate|Associate|Diploma|Certificate)(?:\s+of\s+(?:Science|Arts|Engineering|Business|Law|Medicine))?\b[^.\n]*',
-            # Abbreviated degrees like "BS", "MS", "MBA"
-            r'\b(?:BS|BA|MS|MA|MBA|PhD|BSc|MSc|MD|JD|LLM|BFA|MFA)\b[^.\n]*',
-            # Degrees with periods like "B.S.", "M.A."
-            r'\b(?:B\.S\.|B\.A\.|M\.S\.|M\.A\.|Ph\.D\.|M\.B\.A\.)\b[^.\n]*',
-            # High school education
-            r'\b(?:High School Diploma|GED)\b[^.\n]*'
+            # Full degree names
+            r'\b(?:Bachelor|Master|PhD|Ph\.?D\.?|Doctorate|Doctor|Associate|Diploma|Certificate)(?:\s+of\s+(?:Science|Arts|Engineering|Business|Law|Medicine|Applied Science|Fine Arts))?\s+in\s+[A-Za-z\s,&]+',
+            r'\b(?:Bachelor|Master|PhD|Ph\.?D\.?|Doctorate|Doctor|Associate|Diploma|Certificate)(?:\s+of\s+(?:Science|Arts|Engineering|Business|Law|Medicine|Applied Science|Fine Arts))?(?:\s+in\s+[A-Za-z\s,&]+)?',
+            
+            # Abbreviated degrees with field
+            r'\b(?:BS|BA|MS|MA|MBA|PhD|BSc|MSc|MD|JD|LLM|BFA|MFA|BE|BTech|MTech|BEng|MEng)\s+in\s+[A-Za-z\s,&]+',
+            r'\b(?:BS|BA|MS|MA|MBA|PhD|BSc|MSc|MD|JD|LLM|BFA|MFA|BE|BTech|MTech|BEng|MEng)\s+[A-Za-z\s,&]+',
+            
+            # Degrees with periods
+            r'\b(?:B\.S\.|B\.A\.|M\.S\.|M\.A\.|Ph\.D\.|M\.B\.A\.|B\.E\.|M\.E\.)\s+in\s+[A-Za-z\s,&]+',
+            r'\b(?:B\.S\.|B\.A\.|M\.S\.|M\.A\.|Ph\.D\.|M\.B\.A\.|B\.E\.|M\.E\.)\s+[A-Za-z\s,&]+',
+            
+            # Just the abbreviated degrees
+            r'\b(?:BS|BA|MS|MA|MBA|PhD|BSc|MSc|MD|JD|LLM|BFA|MFA|BE|BTech|MTech|BEng|MEng)\b',
+            r'\b(?:B\.S\.|B\.A\.|M\.S\.|M\.A\.|Ph\.D\.|M\.B\.A\.|B\.E\.|M\.E\.)\b',
+            
+            # High school
+            r'\b(?:High School Diploma|GED|Secondary School Certificate)\b'
         ]
-
-        degrees = []  # Will store all degrees found
-        # Search for each pattern in the education section
-        for pattern in degree_patterns:
-            found_degrees = re.findall(pattern, education_section, re.IGNORECASE)
-            degrees.extend(found_degrees)  # Add all found degrees to our list
-            # extend() adds each item individually, unlike append() which adds the whole list
-
-        # Look for GPA information
-        gpa_pattern = r'GPA:?\s*(\d+\.?\d*(?:/\d+\.?\d*)?|\d+\.?\d*)'
-        # This pattern looks for:
-        # - "GPA:" or "GPA" followed by optional space
-        # - Numbers like "3.5", "3.75", "3.5/4.0"
-        gpa_matches = re.findall(gpa_pattern, education_section, re.IGNORECASE)
         
-        # Remove duplicates while preserving order
-        seen_degrees = set()  # Set to track what we've already seen
-        unique_degrees = []   # List to store unique degrees
-        for degree in degrees:
-            degree_clean = degree.strip().lower()  # Clean and standardize for comparison
-            # Only add if we haven't seen this degree before and it's reasonable length
-            if degree_clean not in seen_degrees and len(degree_clean) > 5:
-                seen_degrees.add(degree_clean)  # Remember we've seen this
-                unique_degrees.append(degree.strip())  # Add original (not lowercased) to results
+        # Process each line to find education entries
+        current_education = None
+        i = 0
         
-        # Create education entries by combining degrees with organizations
-        for i, degree in enumerate(unique_degrees):
-            edu_info = {
-                'degree': degree,
-                # Try to match with organization, or use default if none found
-                'institution': organizations[i] if i < len(organizations) else "Institution not found",
-                "year": None,      # Will try to extract year
-                "gpa": None        # Will try to extract GPA
-            }
+        while i < len(lines):
+            line = lines[i]
+            line_lower = line.lower()
             
-            # Extract year from the degree line or nearby text
-            year_match = re.search(r'\b(19|20)\d{2}\b', degree)
-            # Look for 4-digit years starting with 19 or 20 (1900s or 2000s)
-            if year_match:
-                edu_info['year'] = year_match.group()  # Save the year
+            # Skip obvious section headers
+            if line_lower in ['education', 'academic background', 'qualifications', 'academic']:
+                i += 1
+                continue
             
-            # Extract GPA if found and matches this education entry
-            if gpa_matches and i < len(gpa_matches):
-                edu_info['gpa'] = gpa_matches[i]
+            # Check if this line contains a degree
+            degree_found = None
+            for pattern in degree_patterns:
+                match = re.search(pattern, line, re.IGNORECASE)
+                if match:
+                    degree_found = match.group(0).strip()
+                    break
             
-            education.append(edu_info)  # Add this education entry
+            if degree_found:
+                # Found a degree, start a new education entry
+                print(f"🎓 Found degree: {degree_found}")
+                
+                current_education = {
+                    'degree': degree_found,
+                    'institution': None,
+                    'year': None,
+                    'gpa': None,
+                    'location': None
+                }
+                
+                # Look for institution in the same line (after the degree)
+                remaining_line = re.sub(pattern, '', line, flags=re.IGNORECASE).strip()
+                remaining_line = re.sub(r'^[,\-–—]\s*', '', remaining_line).strip()  # Remove leading punctuation
+                
+                if remaining_line and len(remaining_line) > 2:
+                    # Check if remaining text looks like an institution
+                    if not re.match(r'^\d{4}', remaining_line) and 'gpa' not in remaining_line.lower():
+                        current_education['institution'] = remaining_line
+                        print(f"🏫 Institution from same line: {remaining_line}")
+                
+                # Look for year in the same line
+                year_match = re.search(r'\b(19|20)\d{2}\b', line)
+                if year_match:
+                    current_education['year'] = year_match.group(0)
+                    print(f"📅 Year from same line: {year_match.group(0)}")
+                
+                # Look for GPA in the same line
+                gpa_match = re.search(r'GPA:?\s*(\d+\.?\d*(?:/\d+\.?\d*)?)', line, re.IGNORECASE)
+                if gpa_match:
+                    current_education['gpa'] = gpa_match.group(1)
+                    print(f"📊 GPA from same line: {gpa_match.group(1)}")
+                
+                # Look ahead in next few lines for missing information
+                look_ahead = 3
+                for j in range(1, min(look_ahead + 1, len(lines) - i)):
+                    next_line = lines[i + j].strip()
+                    next_line_lower = next_line.lower()
+                    
+                    # Skip if this line starts a new education entry
+                    if any(re.search(pattern, next_line, re.IGNORECASE) for pattern in degree_patterns):
+                        break
+                    
+                    # Look for institution if we don't have one
+                    if not current_education['institution']:
+                        # Check if line looks like an institution name
+                        institution_keywords = ['university', 'college', 'institute', 'school', 'academy', 'tech']
+                        if (any(keyword in next_line_lower for keyword in institution_keywords) or
+                            (len(next_line) > 5 and len(next_line) < 80 and 
+                            not next_line_lower.startswith(('gpa', 'graduated', 'completed')) and
+                            not re.match(r'^\d{4}', next_line))):
+                            current_education['institution'] = next_line
+                            print(f"🏫 Institution from line {i+j}: {next_line}")
+                    
+                    # Look for year if we don't have one
+                    if not current_education['year']:
+                        year_match = re.search(r'\b(19|20)\d{2}\b', next_line)
+                        if year_match:
+                            current_education['year'] = year_match.group(0)
+                            print(f"📅 Year from line {i+j}: {year_match.group(0)}")
+                    
+                    # Look for GPA if we don't have one
+                    if not current_education['gpa']:
+                        gpa_patterns = [
+                            r'GPA:?\s*(\d+\.?\d*(?:/\d+\.?\d*)?)',
+                            r'Grade Point Average:?\s*(\d+\.?\d*(?:/\d+\.?\d*)?)',
+                            r'CGPA:?\s*(\d+\.?\d*(?:/\d+\.?\d*)?)',
+                            r'Cumulative GPA:?\s*(\d+\.?\d*(?:/\d+\.?\d*)?)'
+                        ]
+                        
+                        for gpa_pattern in gpa_patterns:
+                            gpa_match = re.search(gpa_pattern, next_line, re.IGNORECASE)
+                            if gpa_match:
+                                current_education['gpa'] = gpa_match.group(1)
+                                print(f"📊 GPA from line {i+j}: {gpa_match.group(1)}")
+                                break
+                    
+                    # Look for location
+                    if not current_education['location']:
+                        # Common location patterns
+                        location_patterns = [
+                            r'\b([A-Z][a-z]+,\s*[A-Z]{2})\b',  # City, State
+                            r'\b([A-Z][a-z]+\s*[A-Z][a-z]*,\s*[A-Z][a-z]+)\b'  # City, Country
+                        ]
+                        for loc_pattern in location_patterns:
+                            loc_match = re.search(loc_pattern, next_line)
+                            if loc_match:
+                                current_education['location'] = loc_match.group(1)
+                                print(f"📍 Location from line {i+j}: {loc_match.group(1)}")
+                                break
+                
+                # Use spaCy to find institution if we still don't have one
+                if not current_education['institution'] and doc:
+                    # Look for organizations in the surrounding text
+                    context = ' '.join(lines[max(0, i-2):min(len(lines), i+4)])
+                    context_doc = self.nlp(context) if self.nlp else None
+                    if context_doc:
+                        orgs = [ent.text for ent in context_doc.ents if ent.label_ == "ORG"]
+                        if orgs:
+                            current_education['institution'] = orgs[0]
+                            print(f"🏫 Institution from spaCy: {orgs[0]}")
+                
+                # Set default if still no institution
+                if not current_education['institution']:
+                    current_education['institution'] = "Institution not specified"
+                
+                education.append(current_education)
+                print(f"✅ Added education entry: {current_education}")
+            
+            i += 1
         
-        # Remove duplicate entries based on degree and institution combination
-        final_education = []
-        seen_combos = set()  # Track combinations we've seen
+        # Remove duplicates based on degree and institution
+        seen = set()
+        unique_education = []
         for edu in education:
-            # Create a unique identifier combining degree and institution
-            combo = f"{edu['degree']}-{edu['institution']}".lower()
-            if combo not in seen_combos:
-                seen_combos.add(combo)  # Remember this combination
-                final_education.append(edu)  # Add to final results
+            key = f"{edu['degree'].lower()}-{edu['institution'].lower()}"
+            if key not in seen:
+                seen.add(key)
+                unique_education.append(edu)
         
-        return final_education  # Return list of unique education entries
+        print(f"🎉 Total education entries: {len(unique_education)}")
+        return unique_education
 
     def _extract_skills(self, text: str) -> List[str]:
         """Extract technical skills from resume"""

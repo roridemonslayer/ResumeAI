@@ -1136,7 +1136,7 @@ class ResumeParser: #this makes a class called resume parser
                 if (line_lower == major_section or 
                     (major_section in line_lower and len(line_lower) <= len(major_section) + 5)):
                     section_end = i
-                    print(f"🛑 Section ends at line {i} (loose match '{major_section}'): '{line}'")
+                    print(f"Section ends at line {i} (loose match '{major_section}'): '{line}'")
                     break
             
             if section_end != len(lines):  # If we found an end

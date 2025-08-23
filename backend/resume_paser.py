@@ -801,172 +801,379 @@ class ResumeParser: #this makes a class called resume parser
         return awards[:8]  # Limit to 8 awards
 
     def _extract_projects(self, text: str) -> List[Dict]:
-        """Enhanced project extraction with better parsing"""
-        # This method finds and parses personal or work projects
-        
-        # Look for projects section
+    
+    
+        # Look for projects section with more variations
         proj_section = self._extract_section(text, [
-            'projects', 'side projects', 'personal projects', 'key projects', 'notable projects'
+            'projects', 'side projects', 'personal projects', 'key projects', 
+            'notable projects', 'relevant projects', 'technical projects',
+            'project experience', 'portfolio', 'work samples'
         ])
         
         if not proj_section:
             print("⚠️ No projects section found")
-            return []  # No projects section found
+            return []
         
         print(f"🚀 Found projects section: {len(proj_section)} characters")
+        print(f"📝 Projects section content preview: {proj_section[:200]}...")
         
-        projects = []  # Will store project information
+        projects = []
+        lines = [line.strip() for line in proj_section.split('\n') if line.strip()]
         
-        # Method 1: Split by clear project separators
-        # Look for patterns that typically separate different projects
-        project_patterns = [
-            r'\n(?=[A-Z][^a-z\n]{5,})',  # All caps project names
-            r'\n(?=\d+\.\s*[A-Z])',      # Numbered projects (1. Project Name)
-            r'\n(?=[A-Z][a-zA-Z\s]{10,}:)',  # Project Name: format
-            r'\n(?=•\s*[A-Z][a-zA-Z\s]{5,})',  # Bullet points with project names
+        if not lines:
+            print("❌ No content lines found in projects section")
+            return []
+        
+        print(f"📄 Processing {len(lines)} lines")
+        
+        # Method 1: Look for clear project patterns first
+        project_indicators = [
+            r'^\d+\.\s*(.+)',                    # 1. Project Name
+            r'^[•·▪▫◦‣⁃]\s*(.+)',               # • Project Name  
+            r'^[-*]\s*(.+)',                     # - Project Name or * Project Name
+            r'^([A-Z][A-Za-z\s&]{5,50})\s*[:\-]', # Project Name: or Project Name -
+            r'^([A-Z][A-Za-z\s&]{5,50})\s*\|',  # Project Name |
+            r'^([A-Z][A-Z\s]{5,30})$',          # ALL CAPS PROJECT NAMES
+            r'^\*\*(.+?)\*\*',                  # **Project Name** (markdown bold)
+            r'^__(.+?)__',                      # __Project Name__ (markdown bold)
         ]
         
-        project_blocks = []  # Will store separate project text blocks
-        # Try each pattern to see if it can split the projects effectively
-        for pattern in project_patterns:
-            potential_blocks = re.split(pattern, proj_section)
-            if len(potential_blocks) > 1:  # If pattern found separators
-                project_blocks = potential_blocks
-                print(f"📝 Split projects using pattern, found {len(project_blocks)} blocks")
-                break  # Use this pattern and stop trying others
+        current_project = None
+        current_description = []
+        section_header_found = False
         
-        # Method 2: If no clear splits, try line-by-line approach
-        if len(project_blocks) <= 1:
-            lines = proj_section.split('\n')
-            current_project = []  # Accumulate lines for current project
-            project_blocks = []
+        for i, line in enumerate(lines):
+            original_line = line
+            line_lower = line.lower()
             
-            for line in lines:
-                line = line.strip()
-                if not line:  # Skip empty lines
-                    continue
+            # Skip section headers
+            if line_lower in ['projects', 'side projects', 'personal projects', 'key projects', 
+                            'notable projects', 'relevant projects', 'technical projects',
+                            'project experience', 'portfolio', 'work samples']:
+                print(f"⏭️ Skipping section header: {line}")
+                section_header_found = True
+                continue
+            
+            # Check if line matches any project indicator pattern
+            project_name = None
+            for pattern in project_indicators:
+                match = re.search(pattern, line)
+                if match:
+                    project_name = match.group(1).strip()
+                    print(f"🎯 Found project with pattern '{pattern[:20]}...': '{project_name}'")
+                    break
+            
+            # If we found a project name
+            if project_name:
+                # Save previous project if exists
+                if current_project:
+                    current_project['description'] = '\n'.join(current_description).strip()
+                    if current_project['description']:
+                        projects.append(current_project)
+                        print(f"✅ Saved project: {current_project['name']}")
                 
-                # Check if this line looks like a project title
-                # Project titles are usually: short-ish, capitalized, may have special formatting
-                if (len(line) < 100 and  # Not too long for a title
-                    (line.isupper() or  # All caps
-                     line[0].isupper() or  # Starts with capital
-                     line.endswith(':') or  # Ends with colon
-                     re.match(r'^\d+\.', line) or  # Starts with number
-                     line.startswith('•'))):  # Bullet point
+                # Start new project
+                current_project = {
+                    'name': project_name,
+                    'description': ''
+                }
+                current_description = []
+                print(f"🆕 Started new project: {project_name}")
+                
+            # If we have a current project, add description lines
+            elif current_project:
+                # Skip empty lines
+                if not line.strip():
+                    continue
                     
-                    # Save previous project if we have content
-                    if current_project and len('\n'.join(current_project).strip()) > 20:
-                        project_blocks.append('\n'.join(current_project))
+                # Clean up description line
+                desc_line = line
+                
+                # Remove common prefixes that might be left over
+                desc_line = re.sub(r'^[•·▪▫◦‣⁃\-*]\s*', '', desc_line)
+                desc_line = re.sub(r'^\d+\.\s*', '', desc_line)
+                
+                # Only add substantial description lines
+                if len(desc_line.strip()) > 5:
+                    current_description.append(desc_line.strip())
+                    print(f"   ➕ Added description: {desc_line.strip()[:50]}...")
+            
+            # If we haven't found section header yet and no project indicators worked,
+            # try alternative detection for less structured formats
+            elif not section_header_found or not projects:
+                # Look for lines that might be project names in less structured format
+                if (len(line) > 5 and len(line) < 100 and  # Reasonable length for project name
+                    line[0].isupper() and  # Starts with capital letter
+                    not line.endswith('.') and  # Doesn't end with period (likely not description)
+                    ':' not in line and  # No colon (likely not a label)
+                    not re.match(r'.*\b(?:using|with|in|for|developed|created|built)\b', line_lower) and  # Not description-like
+                    not re.match(r'^(?:technologies|tools|skills|languages):', line_lower)):  # Not tech list
+                    
+                    print(f"🔍 Potential project name (unstructured): {line}")
+                    
+                    # Save previous project if exists
+                    if current_project:
+                        current_project['description'] = '\n'.join(current_description).strip()
+                        if current_project['description']:
+                            projects.append(current_project)
+                            print(f"✅ Saved project: {current_project['name']}")
                     
                     # Start new project
-                    current_project = [line]
-                else:
-                    # Add to current project description
-                    if current_project:  # Only if we have a project started
-                        current_project.append(line)
-            
-            # Add the last project
-            if current_project and len('\n'.join(current_project).strip()) > 20:
-                project_blocks.append('\n'.join(current_project))
-        
-        print(f"📋 Processing {len(project_blocks)} project blocks")
-        
-        # Parse each project block to extract structured information
-        for i, block in enumerate(project_blocks):
-            block = block.strip()
-            if len(block) < 20:  # Skip very short blocks (not enough for a real project)
-                continue
-            
-            # Split block into lines
-            lines = [line.strip() for line in block.split('\n') if line.strip()]
-            if not lines:
-                continue
-            
-            # First line is likely the project name
-            project_name = lines[0]
-            
-            # Clean up the project name by removing formatting
-            project_name = re.sub(r'^[•·▪▫◦‣⁃\-\*]\s*', '', project_name)  # Remove bullets
-            project_name = re.sub(r'^\d+\.\s*', '', project_name)  # Remove numbers like "1. "
-            project_name = project_name.rstrip(':')  # Remove trailing colon
-            
-            # Rest of the lines form the description
-            description_lines = lines[1:] if len(lines) > 1 else []
-            description = '\n'.join(description_lines).strip()
-            
-            # Only add if we have a reasonable project name
-            if (len(project_name) >= 3 and len(project_name) <= 100 and 
-                not project_name.lower() in ['projects', 'key projects', 'notable projects']):
+                    current_project = {
+                        'name': line,
+                        'description': ''
+                    }
+                    current_description = []
+                    print(f"🆕 Started new project (unstructured): {line}")
                 
-                project_info = {
-                    'name': project_name,
-                    'description': description if description else 'No description available'
-                }
-                projects.append(project_info)
-                print(f"✅ Added project: {project_name}")
+                # Add as description if we have a current project
+                elif current_project and len(line.strip()) > 5:
+                    current_description.append(line.strip())
+                    print(f"   ➕ Added description: {line.strip()[:50]}...")
         
-        print(f"🎉 Total projects extracted: {len(projects)}")
-        return projects[:10]  # Limit to 10 projects max
-
+        # Don't forget the last project
+        if current_project:
+            current_project['description'] = '\n'.join(current_description).strip()
+            projects.append(current_project)
+            print(f"✅ Saved final project: {current_project['name']}")
+        
+        # Method 2: If we didn't find projects with structured approach, try splitting by blank lines
+        if not projects:
+            print("🔄 No projects found with structured approach, trying paragraph-based splitting...")
+            
+            # Join all lines and split by double newlines (paragraph breaks)
+            full_text = '\n'.join(lines)
+            paragraphs = [p.strip() for p in re.split(r'\n\s*\n', full_text) if p.strip()]
+            
+            print(f"📊 Found {len(paragraphs)} paragraphs")
+            
+            for i, paragraph in enumerate(paragraphs):
+                para_lines = [l.strip() for l in paragraph.split('\n') if l.strip()]
+                
+                if len(para_lines) >= 1:  # At least one line
+                    # First line is likely the project name
+                    potential_name = para_lines[0]
+                    
+                    # Clean up potential project name
+                    potential_name = re.sub(r'^[•·▪▫◦‣⁃\-*]\s*', '', potential_name)
+                    potential_name = re.sub(r'^\d+\.\s*', '', potential_name)
+                    potential_name = potential_name.strip()
+                    
+                    # Check if this looks like a project name
+                    if (5 <= len(potential_name) <= 100 and
+                        potential_name.lower() not in ['projects', 'personal projects', 'key projects'] and
+                        not potential_name.lower().startswith(('using', 'developed', 'created', 'built'))):
+                        
+                        # Rest of lines form description
+                        description_lines = para_lines[1:] if len(para_lines) > 1 else []
+                        description = '\n'.join(description_lines).strip()
+                        
+                        project = {
+                            'name': potential_name,
+                            'description': description if description else 'No description available'
+                        }
+                        projects.append(project)
+                        print(f"✅ Added project from paragraph {i+1}: {potential_name}")
+        
+        # Method 3: If still no projects, try even more aggressive parsing
+        if not projects:
+            print("🔄 Still no projects found, trying aggressive line-by-line parsing...")
+            
+            potential_projects = []
+            for line in lines:
+                line_clean = line.strip()
+                
+                # Skip obvious non-project lines
+                if (len(line_clean) < 5 or len(line_clean) > 150 or
+                    line_clean.lower() in ['projects', 'personal projects', 'key projects'] or
+                    line_clean.lower().startswith(('using', 'technologies', 'tools', 'skills'))):
+                    continue
+                
+                # Look for lines that could be project names
+                if (line_clean[0].isupper() and  # Starts with capital
+                    not line_clean.endswith('.') and  # Not a sentence
+                    len(line_clean.split()) <= 10):  # Not too many words (likely not description)
+                    
+                    potential_projects.append({
+                        'name': line_clean,
+                        'description': 'No description available'
+                    })
+            
+            # Take only reasonable number of potential projects
+            projects.extend(potential_projects[:8])
+            if potential_projects:
+                print(f"✅ Added {len(potential_projects)} projects from aggressive parsing")
+        
+        # Clean up and validate projects
+        final_projects = []
+        seen_names = set()
+        
+        for project in projects:
+            name = project['name'].strip()
+            name_lower = name.lower()
+            
+            # Skip if we've seen this name or if it's too generic
+            if (name_lower in seen_names or
+                name_lower in ['project', 'projects', 'personal project', 'side project'] or
+                len(name) < 3):
+                continue
+            
+            seen_names.add(name_lower)
+            
+            # Clean up description
+            desc = project['description'].strip()
+            if not desc or desc == 'No description available':
+                project['description'] = 'No description available'
+            
+            final_projects.append(project)
+        
+        print(f"🎉 Final projects count: {len(final_projects)}")
+        
+        # Show what we found
+        for i, project in enumerate(final_projects, 1):
+            print(f"📋 Project {i}: {project['name']}")
+            if project['description'] != 'No description available':
+                print(f"   Description: {project['description'][:100]}...")
+        
+        return final_projects[:10]  # Limit to 10 projects max
     def _extract_section(self, text: str, section_names: List[str]) -> Optional[str]:
-        """Extract a specific section from resume text"""
-        # This is a helper method that finds and extracts specific sections from the resume
+    
+        lines = text.split('\n')
+        section_start = -1
+        section_end = len(lines)
         
-        lines = text.split('\n')  # Split entire resume into lines
-        section_start = -1  # Will mark where our target section begins
-        section_end = len(lines)  # Will mark where our target section ends (default: end of document)
+        print(f"🔍 Looking for sections: {section_names}")
         
-        # Find section start by looking for section headers
+        # Find section start with more precise matching
         for i, line in enumerate(lines):
-            line_clean = line.strip().lower()  # Clean line for comparison
-            # Check if this line contains any of our target section names
+            line_clean = line.strip().lower()
+            line_original = line.strip()
+            
+            # Skip empty lines
+            if not line_clean:
+                continue
+                
+            # Check for exact section matches with various formatting
             for section_name in section_names:
-                # If section name is found in line and line is short (likely a header)
-                if section_name.lower() in line_clean and len(line_clean) < 50:
-                    section_start = i  # Mark this as section start
+                section_lower = section_name.lower()
+                
+                # Exact match patterns
+                exact_patterns = [
+                    f"^{re.escape(section_lower)}$",                    # exact match
+                    f"^{re.escape(section_lower)}:$",                   # with colon
+                    f"^{re.escape(section_lower)}\s*:?$",               # with optional colon
+                    f"^-+\s*{re.escape(section_lower)}\s*-+$",          # with dashes
+                    f"^=+\s*{re.escape(section_lower)}\s*=+$",          # with equals
+                    f"^\*+\s*{re.escape(section_lower)}\s*\*+$",        # with asterisks
+                    f"^#+\s*{re.escape(section_lower)}",                # markdown headers
+                    f"^{re.escape(section_lower)}\s*\|\s*",             # with pipe
+                ]
+                
+                # Check if line matches any pattern
+                if any(re.match(pattern, line_clean) for pattern in exact_patterns):
+                    section_start = i
+                    print(f"✅ Found section '{section_name}' at line {i}: '{line_original}'")
                     break
-            if section_start != -1:  # If we found the section
-                break  # Stop looking
+                    
+                # Also check if it's just the section name alone on a line (common case)
+                if (line_clean == section_lower or 
+                    (section_lower in line_clean and len(line_clean) <= len(section_lower) + 5)):
+                    section_start = i
+                    print(f"✅ Found section '{section_name}' (loose match) at line {i}: '{line_original}'")
+                    break
+            
+            if section_start != -1:
+                break
         
-        if section_start == -1:  # If we never found the section
-            return None  # Section doesn't exist
+        if section_start == -1:
+            print(f"❌ No section found for: {section_names}")
+            return None
         
-        # Find section end (next major section or end of document)
-        for i in range(section_start + 1, len(lines)):  # Start looking after section header
+        # Find section end - look for next major section
+        major_sections = [
+            'experience', 'work experience', 'employment', 'work history', 'professional experience',
+            'education', 'academic background', 'qualifications', 'academic',
+            'skills', 'technical skills', 'competencies', 'core competencies',
+            'projects', 'side projects', 'personal projects', 'key projects', 'portfolio',
+            'certifications', 'certificates', 'licenses', 'credentials',
+            'awards', 'honors', 'achievements', 'recognition', 'accomplishments',
+            'volunteer', 'volunteer experience', 'community service',
+            'publications', 'research', 'patents',
+            'languages', 'references', 'interests', 'hobbies'
+        ]
+        
+        current_section = section_names[0].lower()  # The section we just found
+        
+        for i in range(section_start + 1, len(lines)):
             line = lines[i].strip()
-            # Check if this line looks like a new section header
-            if (line and len(line) < 50 and  # Non-empty and short (header-like)
-                any(keyword in line.lower() for keyword in ['experience', 'education', 'skills', 'projects', 'awards'])):
-                section_end = i  # Mark end of current section
+            line_lower = line.lower()
+            
+            if not line:  # Skip empty lines
+                continue
+                
+            # Check if this line looks like a new major section header
+            for major_section in major_sections:
+                if major_section == current_section:  # Don't end on same section name
+                    continue
+                    
+                # Same patterns as above for detecting section headers
+                exact_patterns = [
+                    f"^{re.escape(major_section)}$",
+                    f"^{re.escape(major_section)}:$",
+                    f"^{re.escape(major_section)}\s*:?$",
+                    f"^-+\s*{re.escape(major_section)}\s*-+$",
+                    f"^=+\s*{re.escape(major_section)}\s*=+$",
+                    f"^\*+\s*{re.escape(major_section)}\s*\*+$",
+                    f"^#+\s*{re.escape(major_section)}",
+                ]
+                
+                if any(re.match(pattern, line_lower) for pattern in exact_patterns):
+                    section_end = i
+                    print(f"🛑 Section ends at line {i} (found '{major_section}'): '{line}'")
+                    break
+                    
+                # Also check loose match for common section names
+                if (line_lower == major_section or 
+                    (major_section in line_lower and len(line_lower) <= len(major_section) + 5)):
+                    section_end = i
+                    print(f"🛑 Section ends at line {i} (loose match '{major_section}'): '{line}'")
+                    break
+            
+            if section_end != len(lines):  # If we found an end
                 break
         
         # Extract the section content
         section_lines = lines[section_start:section_end]
-        return '\n'.join(section_lines)  # Return section as text
+        section_content = '\n'.join(section_lines)
+        
+        print(f"📄 Extracted section with {len(section_lines)} lines")
+        print(f"📝 Section preview: {section_content[:200]}...")
+        
+        return section_content
 
 
-def parse_resume_for_flask(file_path: str, user_id: int = None) -> Dict: 
-    """Enhanced function for Flask integration with better error handling"""
-    # This is a standalone function (not part of the class) for easy use with Flask web framework
-    
-    parser = ResumeParser()  # Create a new parser instance
-    try:
-        # Try to parse the resume
-        parsed_data = parser.parse_resume(file_path, user_id)
-        # If successful, return success response
-        return{
-            'success': True,           # Flag indicating success
-            'data': parsed_data,       # The actual parsed resume data
-            'message': 'Resume parsed successfully'  # Human-readable message
-        }
-    except Exception as e:  # If anything goes wrong
-        # Return error response instead of crashing
-        return{
-            'success': False,          # Flag indicating failure
-            'data': None,              # No data since parsing failed
-            'message': f'Resume parsing failed: {str(e)}'  # Error message
-        }
+
+    def parse_resume_for_flask(file_path: str, user_id: int = None) -> Dict: 
+        """Enhanced function for Flask integration with better error handling"""
+        # This is a standalone function (not part of the class) for easy use with Flask web framework
+        
+        parser = ResumeParser()  # Create a new parser instance
+        try:
+            # Try to parse the resume
+            parsed_data = parser.parse_resume(file_path, user_id)
+            # If successful, return success response
+            return{
+                'success': True,           # Flag indicating success
+                'data': parsed_data,       # The actual parsed resume data
+                'message': 'Resume parsed successfully'  # Human-readable message
+            }
+        except Exception as e:  # If anything goes wrong
+            # Return error response instead of crashing
+            return{
+                'success': False,          # Flag indicating failure
+                'data': None,              # No data since parsing failed
+                'message': f'Resume parsing failed: {str(e)}'  # Error message
+            }
 
 # This section only runs when the script is executed directly (not imported)
 if __name__ == "__main__":

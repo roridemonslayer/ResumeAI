@@ -1180,7 +1180,7 @@ if __name__ == "__main__":
     parser = ResumeParser()  # Create a parser instance
     
     # Test with your resume file
-    test_file = "rori.pdf"  # Make sure this file exists in the same directory
+    test_file = "55.pdf"  # Make sure this file exists in the same directory
     
     # Check if the test file exists before trying to parse it
     if Path(test_file).exists():
@@ -1305,4 +1305,6 @@ if __name__ == "__main__":
             print("Full traceback:")
             traceback.print_exc()  # Print detailed error information for debugging
     else:
-        print(f"❌ Test file '{test_file}' not found. Please add a resume file to test.")
+        print(f"❌ Test file '{test_file}' not found. Please add a resume file to test.")\
+        
+    #work on relevnt cs extraction, leadership postions and expected gradaution section.

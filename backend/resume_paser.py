@@ -1036,6 +1036,13 @@ class ResumeParser: #this makes a class called resume parser
                 print(f"   Description: {project['description'][:100]}...")
         
         return final_projects[:10]  # Limit to 10 projects max
+    
+
+
+
+
+        
+        
     def _extract_section(self, text: str, section_names: List[str]) -> Optional[str]:
     
         lines = text.split('\n')
@@ -1180,7 +1187,7 @@ if __name__ == "__main__":
     parser = ResumeParser()  # Create a parser instance
     
     # Test with your resume file
-    test_file = "55.pdf"  # Make sure this file exists in the same directory
+    test_file = "55.pdf"# Make sure this file exists in the same directory
     
     # Check if the test file exists before trying to parse it
     if Path(test_file).exists():
